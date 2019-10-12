@@ -20,9 +20,353 @@
  * the License.
  */
 
-#ifndef BSOT_MDL__INCLUDE__FUNCTION_INFO__H
-#define BSOT_MDL__INCLUDE__FUNCTION_INFO__H
+#ifndef CPPSERIALIZATION_LIBRARY_INCLUDE__FUNCTION_INFO__H
+#define CPPSERIALIZATION_LIBRARY_INCLUDE__FUNCTION_INFO__H
+
+#include <tuple>
+#include <type_traits>
+
+/**
+ * @brief      msl component namespace
+ */
+namespace msl {
+    /**
+     * @brief      detail
+     */
+    namespace detail {
+        template<typename Ret, typename Class, typename ... Args>
+        struct method_function_info {
+            using ret        = Ret;
+            using cl         = Class;
+            using args       = std::tuple<Args...>;
+            using stack_args = std::tuple<
+                                        std::remove_pointer_t<
+                                            std::decay_t<Args>
+                                        >...
+                            >;
+        };
+
+    } /* end of namespace detal */
+
+    /**
+     * @brief      The function info base definition
+     *
+     * @tparam     <arg>    Any function type
+     */
+    template<typename>
+    struct function_info;
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 ""
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) >
+        : detail::method_function_info<Ret, Class, Args...> {};
 
 
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "noexcept"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) noexcept>
+        : detail::method_function_info<Ret, Class, Args...> {};
 
-#endif /* end of #ifndef BSOT_MDL__INCLUDE__FUNCTION_INFO__H */
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "&"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) &>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "& noexcept"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) & noexcept>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "&&"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) &&>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "&& noexcept"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) && noexcept>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "const"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) const>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "const noexcept"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) const noexcept>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "const &"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) const &>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "const & noexcept"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) const & noexcept>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "const &&"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) const &&>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "const && noexcept"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) const && noexcept>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "volatile"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) volatile>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "volatile noexcept"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) volatile noexcept>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "volatile &"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) volatile &>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "volatile & noexcept"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) volatile & noexcept>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "volatile &&"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) volatile &&>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "volatile && noexcept"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) volatile && noexcept>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "const volatile"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) const volatile>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "const volatile noexcept"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) const volatile noexcept>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "const volatile &"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) const volatile &>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "const volatile & noexcept"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) const volatile & noexcept>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "const volatile &&"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) const volatile &&>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+
+    /**
+     * @brief      The partial specialization for qualifiers
+                 "const volatile && noexcept"
+    *
+    * @tparam     Ret      Type of the returned value
+    * @tparam     Class    Object type
+    * @tparam     Args     Type of the arguments
+    */
+    template<typename Ret, typename Class, typename ... Args>
+    struct function_info<Ret(Class::*)(Args...) const volatile && noexcept>
+        : detail::method_function_info<Ret, Class, Args...> {};
+
+} /* end of namespace msl */
+
+#endif /* end of #ifndef CPPSERIALIZATION_LIBRARY_INCLUDE__FUNCTION_INFO__H */
