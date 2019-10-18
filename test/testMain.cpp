@@ -16,16 +16,16 @@ struct InstanceCounter {
 
     void incAndLog() const {
         ++instances;
-        std::cout << "New object \'" << typeid(T).name() << "\', addr: \'"
-                  << static_cast<void const *>(this) << "\' created, total: \'"
-                  << instances << "\'" << std::endl;
+        // return 100;std::cout << "New object \'" << typeid(T).name() << "\', addr: \'"
+        //           << static_cast<void const *>(this) << "\' created, total: \'"
+        //           << instances << "\'" << std::endl;
     }
 
     void decAndLog() const {
         --instances;
-        std::cout << "Object \'" << typeid(T).name() << "\', addr: \'"
-                  << static_cast<void const *>(this) << "\' destroyed, total: \'"
-                  << instances << "\'" << std::endl;
+        // std::cout << "Object \'" << typeid(T).name() << "\', addr: \'"
+        //           << static_cast<void const *>(this) << "\' destroyed, total: \'"
+        //           << instances << "\'" << std::endl;
     }
 };
 
@@ -34,13 +34,18 @@ size_t InstanceCounter<T>::instances { 0ull };
 
 struct Object1
     : public InstanceCounter<Object1> {
-    int getValue() { std::cout << " getValue invoked!" << std::endl; return 100; }
+    void getValue(int & i) {
+    //    std::cout << " getValue invoked!" << std::endl;
+        static int ii { 11111 };
+        ii += 11111;
+        i = ii;
+    }
 };
 
 struct Object2
     : public InstanceCounter<Object2> {
     void getObject1(Object1 & obj) {
-        std::cout << "  getObject1 invoked!" << std::endl;
+      //  std::cout << "  getObject1 invoked!" << std::endl;
         (void)obj;
     }
 };
@@ -48,11 +53,20 @@ struct Object2
 struct Object3
     : public InstanceCounter<Object3> {
     void getObject2(Object2 * obj) {
-        std::cout << "  getObject2 invoked!" << std::endl;
+        //std::cout << "  getObject2 invoked!" << std::endl;
     }
+};
+
+constexpr msl::serializer ser {
+    msl::makeSerializer<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call1"),
+    msl::makeSerializer<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call2"),
+    msl::makeSerializer<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call3"),
+    msl::makeSerializer<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call4")
 };
 
 int main() {
     Object3 obj {};
-    msl::chainInvoke(obj, &Object3::getObject2, &Object2::getObject1, &Object1::getValue);
+    msl::SerializationInterface si;
+
+    ser(obj, si);
 }

@@ -26,6 +26,7 @@
 #include <function_info.h>
 
 #include <tuple>
+#include <array>
 #include <type_traits>
 
 
@@ -124,14 +125,103 @@ namespace msl {
         };
     } /* end of namespace detail */
 
+    /**
+     * @brief      Invoeks the first for the object, second for the result of
+     *             the first, third for result of the second an so on
+     *
+     * @tparam     TObj
+     * @tparam     TFxs
+     * @param      aObj
+     * @param      aFxs
+     * @return     auto
+     */
     template<typename TObj, typename ... TFxs>
     auto chainInvoke(TObj && aObj, TFxs && ... aFxs) {
         return (detail::FoldingBeginner<std::decay_t<TObj>>{ aObj } << ... << std::forward<TFxs>(aFxs)).tuple;
     }
 
+    struct SerializationInterface {
+        template<typename ... T>
+        void operator()(char const * tag, std::tuple<T...> const & aTuple) {
+            std::cout << "\'" << tag << "\': \'";
+            putStream(std::cout, aTuple, std::make_index_sequence<sizeof...(T)>{});
+            std::cout << "\'";
+        }
+
+        template<typename Tuple, size_t ... Idx>
+        static std::ostream & putStream(std::ostream & aOs, Tuple const & t, std::index_sequence<Idx...>) {
+            return (aOs << ... << std::get<Idx>(t));
+        }
+    };
+
+    /**
+     * @brief      Type which simply holds the values
+     *
+     * @tparam     Vals
+     */
+    template<auto ... Vals>
+    struct forwarder {};
+
+    template<typename T>
+    struct serialization_invoker {
+        using invoker_ptr_t = void(*)(T & t, char const * tag, SerializationInterface &);
+
+        using type = T;
+
+        invoker_ptr_t invokerPtr;
+        char const *  tag;
 
 
 
+        template<auto ... Fx>
+        constexpr serialization_invoker(forwarder<Fx...>, char const * tag_)
+            : invokerPtr { &theInvoker<Fx...> }
+            , tag        { tag_ }
+        { }
+
+        void operator()(T& t, SerializationInterface & si) const  {
+            (*invokerPtr)(t, tag, si);
+        }
+
+        template<auto ... Fx>
+        static void theInvoker(T& t, char const * tag, SerializationInterface & si) {
+            si(tag, chainInvoke(t, Fx...));
+        }
+    };
+
+    template<typename ...T>
+    struct first_class {};
+
+    template<typename T, typename ... R>
+    struct first_class<T, R...> {
+        using type = typename function_info<T>::cl;
+    };
+    template<auto ... fx>
+    constexpr auto makeSerializer(char const * tag) {
+         return serialization_invoker< typename first_class<decltype(fx)...>::type>{ forwarder<fx...> {}, tag };
+    }
+
+    template<typename T, typename ...>
+    struct first {
+        using type = T;
+    };
+
+
+    template<typename T, size_t N>
+    class serializer
+    {
+        std::array<serialization_invoker<T>, N> m_arr;
+    public:
+        template<typename ... Args>
+        constexpr serializer(Args ... args) : m_arr{ args... } {}
+
+        void operator()(T& obj, SerializationInterface & si) const {
+            for (auto it : m_arr) { it (obj, si); }
+        }
+    };
+
+    template<typename ... T>
+    explicit serializer(T ...) -> serializer<typename first<T...>::type::type, sizeof...(T)>;
 
 } /* end of namespace msl */
 
