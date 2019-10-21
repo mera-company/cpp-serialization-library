@@ -16,16 +16,16 @@ struct InstanceCounter {
 
     void incAndLog() const {
         ++instances;
-        // return 100;std::cout << "New object \'" << typeid(T).name() << "\', addr: \'"
-        //           << static_cast<void const *>(this) << "\' created, total: \'"
-        //           << instances << "\'" << std::endl;
+        std::cout << "    +++New object \'" << typeid(T).name() << "\', addr: \'"
+                  << static_cast<void const *>(this) << "\' created, total: \'"
+                  << instances << "\'" << std::endl;
     }
 
     void decAndLog() const {
         --instances;
-        // std::cout << "Object \'" << typeid(T).name() << "\', addr: \'"
-        //           << static_cast<void const *>(this) << "\' destroyed, total: \'"
-        //           << instances << "\'" << std::endl;
+        std::cout << "    ---Object \'" << typeid(T).name() << "\', addr: \'"
+                  << static_cast<void const *>(this) << "\' destroyed, total: \'"
+                  << instances << "\'" << std::endl;
     }
 };
 
@@ -57,16 +57,31 @@ struct Object3
     }
 };
 
-constexpr msl::serializer ser {
-    msl::makeSerializer<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call1"),
-    msl::makeSerializer<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call2"),
-    msl::makeSerializer<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call3"),
-    msl::makeSerializer<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call4")
+struct Serializer {
+    template<typename ... T>
+    void operator()(char const * tag, std::tuple<T...> const & aTuple) {
+        std::cout << "\'" << tag << "\': \'";
+        putStream(std::cout, aTuple, std::make_index_sequence<sizeof...(T)>{});
+        std::cout << "\'\n";
+    }
+
+    template<typename Tuple, size_t ... Idx>
+    static std::ostream & putStream(std::ostream & aOs, Tuple const & t, std::index_sequence<Idx...>) {
+        return (aOs << ... << std::get<Idx>(t));
+    }
+};
+
+constexpr msl::v1::serializer ser {
+    msl::v1::on_invoke<Serializer>{},
+    msl::v1::delayedCall<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call1"),
+    msl::v1::delayedCall<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call2"),
+    msl::v1::delayedCall<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call3"),
+    msl::v1::delayedCall<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call4")
 };
 
 int main() {
     Object3 obj {};
-    msl::SerializationInterface si;
+    Serializer si;
 
     ser(obj, si);
 }

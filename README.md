@@ -1,66 +1,32 @@
-# Project Title
+# Metaprogramming Serialization Library (MSL)
 
-One Paragraph of project description goes here
+MSL provides a really simple and fast way of serialization of any object using public interfaces (methods) only
 
-## Getting Started
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
+* The library is well tested with **GCC-9.2.1**, please use it for better results
+* **cmake-3.0.0**
 
-```
-Give examples
-```
+## Building
 
-### Installing
-
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
+* `mkdir build && cd build`
+* `cmake ..`
+* `make`
+* `./test/demo` - to run the small demo
 
 ## Running the tests
 
-Explain how to run the automated tests for this system
+Tests are not ready yet, to be filled once tests are added
 
-### Break down into end to end tests
+## Coding style
 
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
+* We're using K&R coding style.
+* The identation is 4 spaces
 
 ## Deployment
 
 Add additional notes about how to deploy this on a live system
-
-## Built With
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
 
 ## Contributing
 
@@ -68,11 +34,11 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://gitlab.merann.ru/ma-community/open-source-template/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://gitlab.merann.ru/ma-community/open-source-template/tags).
 
 ## Authors
 
-* **Your Name** - *Initial work* - [You Project Name and Url](https://gitlab.merann.ru/ma-community/open-source-template)
+* **Alexander Ganyukhin** - *Initial work* - [You Project Name and Url](https://gitlab.merann.ru/ma-community/open-source-template)
 
 See also the list of [contributors](https://gitlab.merann.ru/ma-community/open-source-template/graphs/master) who participated in this project.
 

@@ -223,6 +223,96 @@ namespace msl {
     template<typename ... T>
     explicit serializer(T ...) -> serializer<typename first<T...>::type::type, sizeof...(T)>;
 
+
+namespace v1 {
+    template<typename T, typename OnCall>
+    struct serialization_invoker {
+        using invoker_ptr_t = void(*)(T & t, char const * tag, OnCall &);
+
+        using type = T;
+
+        invoker_ptr_t invokerPtr;
+        char const *  tag;
+
+
+        template<auto ... Fx>
+        constexpr serialization_invoker(forwarder<Fx...>, char const * tag_)
+            : invokerPtr { &theInvoker<Fx...> }
+            , tag        { tag_ }
+        { }
+
+        void operator()(T& t, OnCall & si) const  {
+            (*invokerPtr)(t, tag, si);
+        }
+
+        template<auto ... Fx>
+        static void theInvoker(T& t, char const * tag, OnCall & si) {
+            si(tag, chainInvoke(t, Fx...));
+        }
+    };
+
+    template<typename ...T>
+    struct first_class {};
+
+    template<typename T, typename ... R>
+    struct first_class<T, R...> {
+        using type = typename function_info<T>::cl;
+    };
+
+    template<typename OnCall, auto ... fx>
+    constexpr auto makeSerializer(char const * tag) {
+         return serialization_invoker< typename first_class<decltype(fx)...>::type, OnCall>{ forwarder<fx...> {}, tag };
+    }
+
+
+    template<auto ... fx>
+    struct call_forwarder {
+        using type = typename first_class<decltype(fx)...>::type;
+
+        char const *  tag;
+
+        constexpr call_forwarder(char const * aTag)
+            : tag { aTag }
+        {}
+
+        template<typename T>
+        constexpr auto getInvoker() const noexcept {
+            return makeSerializer<T, fx...>(tag);
+        }
+    };
+
+    template<typename T>
+    struct on_invoke {
+        using type = T;
+    };
+
+    template<auto ... fx>
+    constexpr auto delayedCall(char const * tag) {
+        return call_forwarder<fx...>{ tag };
+    }
+
+
+
+
+    template<typename Invoker, typename Object, size_t N>
+    class serializer {
+        using Invoker_t = serialization_invoker<Object, Invoker>;
+        std::array<Invoker_t, N> m_arr;
+    public:
+        template<typename ... Args>
+        constexpr serializer(on_invoke<Invoker>, Args ... args)
+            : m_arr{ args. template getInvoker<Invoker>()... }
+        {}
+
+        void operator()(Object & obj, Invoker & si) const {
+            for (auto it : m_arr) { it (obj, si); }
+        }
+    };
+
+    template<typename Invoker, typename ... T>
+    explicit serializer(on_invoke<Invoker>, T ...) -> serializer<Invoker, typename first<T...>::type::type, sizeof...(T)>;
+
+} /* end of namespace v1 */
 } /* end of namespace msl */
 
 #endif /* end of #ifndef INCLUDE__CHAIN_INVOKER__H */
