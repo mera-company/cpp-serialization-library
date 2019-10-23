@@ -1,7 +1,8 @@
-# Metaprogramming Serialization Library (MSL)
+# Metaprogramming Invoking Library (MIL)
 
-MSL provides a really simple and fast way of serialization of any object using public interfaces (methods) only
+MIL provides a really simple and fast way of automatically invoke methods (and chains of methods) of any object.
 
+Please Note, it's the very beginning of the library, and the code now is mosly simple PoC (proof of concept), rather than a good library
 
 ### Prerequisites
 

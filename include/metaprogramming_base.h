@@ -1,6 +1,9 @@
 /**
  * @file      metaprogramming_base.h
  *
+ * @brief     Contains various useful metaprogramming definitions, which are not
+ *            directly related to the MIL subject
+ *
  * @author    Alexander Ganyukhin (alexander.ganyukhin@mera.com)
  *
  * @date      2019-October-23

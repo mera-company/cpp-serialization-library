@@ -3,4 +3,4 @@ add_executable(
     testMain.cpp
 )
 
-target_link_libraries(demo metaserializationlibrary)
+target_link_libraries(demo mil)
