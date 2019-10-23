@@ -10,16 +10,12 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 include(CTest)
 enable_testing()
 
-add_library(metaserializationlibrary STATIC
-    src/temp_source_file.cpp
-)
+add_library(metaserializationlibrary INTERFACE)
 
 target_include_directories(metaserializationlibrary
-    PUBLIC
+    INTERFACE
         $<INSTALL_INTERFACE:include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

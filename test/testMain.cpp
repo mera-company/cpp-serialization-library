@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <iostream>
-#include <chain_invoker.h>
+
+#include <object_invoke.h>
 
 template<typename T>
 struct InstanceCounter {
@@ -71,17 +72,20 @@ struct Serializer {
     }
 };
 
-constexpr msl::v1::serializer ser {
-    msl::v1::on_invoke<Serializer>{},
-    msl::v1::delayedCall<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call1"),
-    msl::v1::delayedCall<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call2"),
-    msl::v1::delayedCall<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call3"),
-    msl::v1::delayedCall<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call4")
+
+
+constexpr mil::object_invoke invoke {
+    mil::useAcceptor<Serializer>(),
+    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call1"),
+    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call2"),
+    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call3"),
+    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call4")
 };
+
 
 int main() {
     Object3 obj {};
     Serializer si;
 
-    ser(obj, si);
+    invoke(obj, si);
 }

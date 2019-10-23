@@ -34,6 +34,13 @@ namespace msl {
      * @brief      detail
      */
     namespace detail {
+        /**
+         * @brief      Helping type-defing structure
+         *
+         * @tparam     Ret     Returned  type
+         * @tparam     Class   Class     type
+         * @tparam     Args    Arguments type
+         */
         template<typename Ret, typename Class, typename ... Args>
         struct method_function_info {
             using ret        = Ret;
