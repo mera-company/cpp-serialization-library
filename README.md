@@ -35,13 +35,13 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://gitlab.merann.ru/ma-community/open-source-template/tags).
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://ctogitlab.mera.com/ganyukh/cppserializationlibrary/-/tags).
 
 ## Authors
 
-* **Alexander Ganyukhin** - *Initial work* - [You Project Name and Url](https://gitlab.merann.ru/ma-community/open-source-template)
+* **Alexander Ganyukhin** - *Initial work* - [CppSerializationLibrary](https://ctogitlab.mera.com/ganyukh/cppserializationlibrary)
 
-See also the list of [contributors](https://gitlab.merann.ru/ma-community/open-source-template/graphs/master) who participated in this project.
+See also the list of [contributors](https://ctogitlab.mera.com/ganyukh/cppserializationlibrary/-/graphs/master) who participated in this project.
 
 ## License
 
