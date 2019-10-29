@@ -20,8 +20,8 @@
  * the License.
  */
 
-#ifndef CPPSERIALIZATION_LIBRARY_INCLUDE__FUNCTION_INFO__H
-#define CPPSERIALIZATION_LIBRARY_INCLUDE__FUNCTION_INFO__H
+#ifndef INCLUDE__FUNCTION_INFO__H
+#define INCLUDE__FUNCTION_INFO__H
 
 #include <tuple>
 #include <type_traits>
@@ -376,4 +376,4 @@ namespace msl {
 
 } /* end of namespace msl */
 
-#endif /* end of #ifndef CPPSERIALIZATION_LIBRARY_INCLUDE__FUNCTION_INFO__H */
+#endif /* end of #ifndef INCLUDE__FUNCTION_INFO__H */
