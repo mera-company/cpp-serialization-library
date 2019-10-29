@@ -35,13 +35,13 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://ctogitlab.mera.com/ganyukh/cppserializationlibrary/-/tags).
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/mera-company/cpp-serialization-library/tags).
 
 ## Authors
 
-* **Alexander Ganyukhin** - *Initial work* - [CppSerializationLibrary](https://ctogitlab.mera.com/ganyukh/cppserializationlibrary)
+* **Alexander Ganyukhin** - *Initial work* - [CppSerializationLibrary](https://github.com/mera-company/cpp-serialization-library)
 
-See also the list of [contributors](https://ctogitlab.mera.com/ganyukh/cppserializationlibrary/-/graphs/master) who participated in this project.
+See also the list of [contributors](https://github.com/mera-company/cpp-serialization-library/graphs/contributors) who participated in this project.
 
 ## License
 
