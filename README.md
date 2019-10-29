@@ -22,7 +22,7 @@ Tests are not ready yet, to be filled once tests are added
 
 ## Coding style
 
-* We're using K&R coding style.
+* We're using [1TBS(OTBS)](https://en.wikipedia.org/wiki/Indentation_style#Variant:_1TBS_(OTBS)) indentation style
 * The identation is 4 spaces
 
 ## Deployment
