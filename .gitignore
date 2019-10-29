@@ -1,0 +1,66 @@
+# CMake - https://github.com/github/gitignore/blob/master/CMake.gitignore
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+build/
+
+# Autotools - https://github.com/github/gitignore/blob/master/Autotools.gitignore
+Makefile.in
+ar-lib
+mdate-sh
+py-compile
+test-driver
+ylwrap
+autom4te.cache
+autoscan.log
+autoscan-*.log
+aclocal.m4
+compile
+config.guess
+config.h.in
+config.sub
+configure
+configure.scan
+depcomp
+install-sh
+missing
+stamp-h1
+ltmain.sh
+texinfo.tex
+
+# Eclipse project files - https://github.com/github/gitignore/blob/master/Global/Eclipse.gitignore
+.metadata
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+.externalToolBuilders/
+*.launch
+.cproject
+
+# KDevelop4 project files - https://github.com/github/gitignore/blob/master/Global/KDevelop4.gitignore
+*.kdev4
+.kdev4/
+
+# Clion project files
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/*.iws
+.idea/
+
+#Windows
+.vs
+
+#Visual studio code
+.vscode
