@@ -110,4 +110,6 @@ int main() {
     Serializer si;
 
     invoke(obj, si);
+    
+    return 0;
 }
