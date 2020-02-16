@@ -146,7 +146,6 @@ using namespace msl;
              */
             template<typename OpFx>
             constexpr auto operator<<(OpFx const & aFx) && {
-                using invoking_t = typename function_info<OpFx>::cl;
                 return OwningInvokingStep<OpFx>{ aFx, obj };
             }
         };

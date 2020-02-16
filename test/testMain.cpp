@@ -75,7 +75,7 @@ struct Object2
 
 struct Object3
     : public InstanceCounter<Object3> {
-    void getObject2(Object2 * obj) {
+    void getObject2(Object2 * /*obj*/) {
         //std::cout << "  getObject2 invoked!" << std::endl;
     }
 };
