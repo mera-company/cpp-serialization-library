@@ -69,15 +69,26 @@ struct Object2
     : public InstanceCounter<Object2> {
     void getObject1(Object1 & obj) {
       //  std::cout << "  getObject1 invoked!" << std::endl;
-        (void)obj;
+        obj = obj_;
     }
+
+    Object1 obj_;
 };
 
 struct Object3
     : public InstanceCounter<Object3> {
-    void getObject2(Object2 * /*obj*/) {
+    void getObject2(Object2 * obj) {
         //std::cout << "  getObject2 invoked!" << std::endl;
+        *obj = obj_;
     }
+
+    void testFail(int c)
+    {
+        c = 15;
+        std::cout << c << std::endl;
+    }
+
+    Object2 obj_;
 };
 
 struct Serializer {
@@ -101,7 +112,10 @@ constexpr mil::object_invoke invoke {
     mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call1"),
     mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call2"),
     mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call3"),
-    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call4")
+    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call4"),
+
+    // this case not compile. it is okay
+    //mil::delayedInvoke<&Object3::testFail>("call5")
 };
 
 

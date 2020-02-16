@@ -67,10 +67,14 @@ using namespace msl;
          * @tparam     Fx    Type of the method
          */
         template<typename Fx>
-        struct OwningInvokingStep {
-            using tuple_t    = typename function_info<Fx>::stack_args;
-            using qalified_t = typename function_info<Fx>::args;
-            using class_t    = typename function_info<Fx>::cl;
+        struct OwningInvokingStep {            
+            using TFunctionInfo = function_info<Fx>;
+            using tuple_t    = typename TFunctionInfo::stack_args;
+            using qalified_t = typename TFunctionInfo::args;
+            using class_t    = typename TFunctionInfo::cl;
+
+            // not use dicrectly but in constructor have static assert
+            const TFunctionInfo function_info_;
 
             static constexpr size_t TUPLE_SIZE { std::tuple_size_v<tuple_t> };
 

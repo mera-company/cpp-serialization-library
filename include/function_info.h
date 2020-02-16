@@ -53,7 +53,26 @@ namespace msl {
                             >;
         };
 
+        template<typename ... TArgs>
+        void checkThanRefOrPointer()
+        {
+            static_assert(((std::is_reference_v<TArgs> || std::is_pointer_v<TArgs>) && ...), "must be pointer or reference");
+        }
+
     } /* end of namespace detal */
+
+// this macro will be unded in this file
+#ifdef MARCRO_CHECK_THAN_REF_OR_POINTER
+#error "MARCRO_CHECK_THAN_REF_OR_POINTER already defined"
+#endif
+#define MARCRO_CHECK_THAN_REF_OR_POINTER(ClassName)\
+    {\
+        ClassName()\
+        {\
+            detail::checkThanRefOrPointer<Args...>();\
+        }\
+    };
+// endmacro defrnition
 
     /**
      * @brief      The function info base definition
@@ -73,7 +92,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) >
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -86,7 +106,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) noexcept>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -99,8 +120,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) &>
-        : detail::method_function_info<Ret, Class, Args...> {};
-
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
     /**
      * @brief      The partial specialization for qualifiers
@@ -112,7 +133,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) & noexcept>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -125,7 +147,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) &&>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -138,7 +161,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) && noexcept>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -151,7 +175,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) const>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -164,7 +189,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) const noexcept>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -177,7 +203,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) const &>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -190,7 +217,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) const & noexcept>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -203,7 +231,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) const &&>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -216,7 +245,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) const && noexcept>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -229,7 +259,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) volatile>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -242,7 +273,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) volatile noexcept>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -255,7 +287,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) volatile &>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>\
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -268,7 +301,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) volatile & noexcept>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -281,7 +315,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) volatile &&>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -294,7 +329,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) volatile && noexcept>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -307,7 +343,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) const volatile>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -320,7 +357,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) const volatile noexcept>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -333,7 +371,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) const volatile &>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -346,7 +385,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) const volatile & noexcept>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -359,7 +399,8 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) const volatile &&>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
 
     /**
@@ -372,7 +413,12 @@ namespace msl {
     */
     template<typename Ret, typename Class, typename ... Args>
     struct function_info<Ret(Class::*)(Args...) const volatile && noexcept>
-        : detail::method_function_info<Ret, Class, Args...> {};
+        : detail::method_function_info<Ret, Class, Args...>
+MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
+
+#ifdef MARCRO_CHECK_THAN_REF_OR_POINTER
+#undef MARCRO_CHECK_THAN_REF_OR_POINTER
+#endif
 
 } /* end of namespace msl */
 
