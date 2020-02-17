@@ -100,12 +100,12 @@ namespace detail {
         /**
          * @brief      Pointer to a concrete invoker specialization
          */
-        invoker_ptr_t m_invokerPtr;
+        invoker_ptr_t m_invokerPtr = nullptr;
 
         /**
          * @brief      Associated tag
          */
-        char const *  m_tag;
+        char const *  m_tag = nullptr;
     };
 
     /** @{ */

@@ -61,6 +61,21 @@ using namespace msl;
             }
         }
 
+        template<bool have_agrs, typename TRet, typename stack_args>
+        struct TypeSelector final
+        {
+            private:
+                using t1 = std::conditional_t<have_agrs, stack_args, std::tuple<TRet>>;
+                inline static constexpr bool is_ref = std::is_reference_v<TRet>;
+                using no_ref_but_pointer = std::tuple<std::add_pointer_t<std::remove_reference_t<TRet>>>;
+                using t2 = std::conditional_t<is_ref, std::tuple<no_ref_but_pointer>, std::tuple<TRet>>;
+
+            public:
+                inline static constexpr bool have_agrs_value = have_agrs;
+                inline static constexpr bool is_ref_value = is_ref;
+                using type = std::conditional_t<is_ref, t2, t1>;
+        };
+
         /**
          * @brief      The invoking step object, which also holds the tuple
          *
@@ -69,14 +84,15 @@ using namespace msl;
         template<typename Fx>
         struct OwningInvokingStep {            
             using TFunctionInfo = function_info<Fx>;
-            using tuple_t    = typename TFunctionInfo::stack_args;
+            using ret_t      = typename TFunctionInfo::ret;
+            inline static constexpr bool have_agrs = TFunctionInfo::args_count > 0;
+            using type_selector_t = TypeSelector<have_agrs, ret_t, typename TFunctionInfo::stack_args>;
+            using tuple_t    = typename type_selector_t::type;
             using qalified_t = typename TFunctionInfo::args;
             using class_t    = typename TFunctionInfo::cl;
 
             // not use dicrectly but in constructor have static assert
             const TFunctionInfo function_info_;
-
-            static constexpr size_t TUPLE_SIZE { std::tuple_size_v<tuple_t> };
 
             tuple_t tuple;
 
@@ -92,8 +108,15 @@ using namespace msl;
              */
             template<typename OpFx>
             constexpr auto operator<<(OpFx const & aFx) && {
-                using invoking_t = typename function_info<OpFx>::cl;
-                return OwningInvokingStep<OpFx>{ aFx, std::get<invoking_t>(tuple) };
+                if constexpr (type_selector_t::have_agrs_value)
+                {
+                    using invoking_t = typename function_info<OpFx>::cl;
+                    return OwningInvokingStep<OpFx>{ aFx, std::get<invoking_t>(tuple) };
+                }
+                if constexpr (!type_selector_t::have_agrs_value && !type_selector_t::is_ref_value)
+                {
+                    return OwningInvokingStep<OpFx>{ aFx, std::get<0>(tuple) };
+                }
             }
 
             /**
@@ -106,7 +129,16 @@ using namespace msl;
             explicit constexpr OwningInvokingStep(Fx const & aFx, Obj & obj)
                 : tuple { }
             {
-                this->invokeImpl(std::make_index_sequence<TUPLE_SIZE>{}, aFx, obj);
+                if constexpr (type_selector_t::have_agrs_value)
+                {
+                    static_assert(std::is_same_v<class_t, Obj>, "must be one type");
+                    this->invokeImpl(std::make_index_sequence<TFunctionInfo::args_count>{}, aFx, obj);
+                }
+                if constexpr (!type_selector_t::have_agrs_value && !type_selector_t::is_ref_value)
+                {
+                    static_assert(std::is_same_v<class_t, Obj>, "must be one type");
+                    this->invokeImplWithret(aFx, obj);
+                }
             }
         private:
             /**
@@ -117,7 +149,14 @@ using namespace msl;
              */
             template<typename Obj, size_t ... Idx>
             constexpr void invokeImpl(std::index_sequence<Idx...>, Fx const & aFx, Obj & obj) {
+                static_assert(std::is_same_v<class_t, Obj>, "must be one type");
                 (obj.*aFx)(conditionalAddressOf<std::tuple_element_t<Idx, qalified_t>>(std::get<Idx>(tuple))...);
+            }
+
+            template<typename Obj>
+            constexpr void invokeImplWithret(Fx const & aFx, Obj & obj) {
+                static_assert(std::is_same_v<class_t, Obj>, "must be one type");
+                std::get<0>(tuple) = (obj.*aFx)();
             }
         };
 

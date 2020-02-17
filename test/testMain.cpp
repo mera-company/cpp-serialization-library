@@ -59,10 +59,18 @@ struct Object1
     : public InstanceCounter<Object1> {
     void getValue(int & i) {
     //    std::cout << " getValue invoked!" << std::endl;
-        static int ii { 11111 };
         ii += 11111;
         i = ii;
     }
+
+    int retGetValue()
+    {
+        std::cout << "retGetValue" << std::endl;
+        ii += 11111;
+        return ii;
+    }
+
+    inline static int ii { 11111 };
 };
 
 struct Object2
@@ -70,6 +78,11 @@ struct Object2
     void getObject1(Object1 & obj) {
       //  std::cout << "  getObject1 invoked!" << std::endl;
         obj = obj_;
+    }
+
+    Object1 retObject1() const {
+        std::cout << "  retObject1 invoked" << std::endl;
+        return obj_;
     }
 
     Object1 obj_;
@@ -106,16 +119,18 @@ struct Serializer {
 };
 
 
-
-constexpr mil::object_invoke invoke {
+constexpr mil::object_invoke invoke {    
     mil::useAcceptor<Serializer>(),
     mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call1"),
     mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call2"),
     mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call3"),
     mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call4"),
 
-    // this case not compile. it is okay
+    // this case not compile. it is okay because getters C style must accept only refs and pointers
     //mil::delayedInvoke<&Object3::testFail>("call5")
+
+    //mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::retGetValue>("call6"),
+    mil::delayedInvoke<&Object3::getObject2, &Object2::retObject1, &Object1::retGetValue>("call7")
 };
 
 
@@ -123,6 +138,7 @@ int main() {
     Object3 obj {};
     Serializer si;
 
+    //invoke.set_logger(std::function{[](const std::string& v){ std::cout << v << std::endl; }});
     invoke(obj, si);
     
     return 0;

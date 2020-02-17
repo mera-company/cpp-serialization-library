@@ -46,6 +46,7 @@ namespace msl {
             using ret        = Ret;
             using cl         = Class;
             using args       = std::tuple<Args...>;
+            inline static constexpr size_t args_count = sizeof...(Args);
             using stack_args = std::tuple<
                                         std::remove_pointer_t<
                                             std::decay_t<Args>
