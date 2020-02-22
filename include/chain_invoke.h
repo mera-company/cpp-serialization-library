@@ -61,19 +61,48 @@ using namespace msl;
             }
         }
 
+        /**
+        * @brief TypeSelector will select what tuple of agrs will get from function
+        *        tuple fow univsality and compatibility
+        * @tparam     have_agrs     have function atgs or no
+        * @tparam     TRet          return type
+        * @tparam     stack_args    tuple of args if function have_agrs
+        * @details    Possible three variants which described below
+        // 1) if have agrs - then return type must be void and function params must
+        //    be refs or pointers. Selected type is tuple (stack_args)
+        // 2) if have no agrs and return type is not ref or pointer then selected type is tuple<TRet>
+        // 3) if have no agrs and return type is ref or pointer then selected type is tuple<pointer<TRet>>
+        */
         template<bool have_agrs, typename TRet, typename stack_args>
         struct TypeSelector final
         {
             private:
-                using t1 = std::conditional_t<have_agrs, stack_args, std::tuple<TRet>>;
+                using stack_args_or_ret_value = std::conditional_t<have_agrs, stack_args, std::tuple<TRet>>;
                 inline static constexpr bool is_ref = std::is_reference_v<TRet>;
+                inline static constexpr bool is_pointer = std::is_pointer_v<TRet>;
                 using no_ref_but_pointer = std::tuple<std::add_pointer_t<std::remove_reference_t<TRet>>>;
-                using t2 = std::conditional_t<is_ref, std::tuple<no_ref_but_pointer>, std::tuple<TRet>>;
+                using ret_pointer_or_ret_value = std::conditional_t<is_ref, std::tuple<no_ref_but_pointer>, std::tuple<TRet>>;
 
             public:
                 inline static constexpr bool have_agrs_value = have_agrs;
                 inline static constexpr bool is_ref_value = is_ref;
-                using type = std::conditional_t<is_ref, t2, t1>;
+                inline static constexpr bool is_pointer_value = is_pointer;
+                using args_pointer_value = std::conditional_t<is_ref, ret_pointer_or_ret_value, stack_args_or_ret_value>;
+                using type = std::conditional_t<is_pointer, ret_pointer_or_ret_value, args_pointer_value>;
+
+                TypeSelector()
+                {
+                    if constexpr(have_agrs_value)
+                    {
+                        static_assert(std::is_same_v<void, TRet>, "if have args then return value must be void");
+                    }
+                    if constexpr(! have_agrs_value)
+                    {
+                        static_assert(! std::is_same_v<void, TRet>, "if have no args then return value can't be void");
+                    }
+                    static_assert(!is_ref_value, "still have no realization for return type reference");
+                    static_assert(!is_pointer_value, "still have no realization for return type pointer");
+                }
         };
 
         /**
@@ -83,18 +112,20 @@ using namespace msl;
          */
         template<typename Fx>
         struct OwningInvokingStep {            
-            using TFunctionInfo = function_info<Fx>;
-            using ret_t      = typename TFunctionInfo::ret;
-            inline static constexpr bool have_agrs = TFunctionInfo::args_count > 0;
-            using type_selector_t = TypeSelector<have_agrs, ret_t, typename TFunctionInfo::stack_args>;
-            using tuple_t    = typename type_selector_t::type;
-            using qalified_t = typename TFunctionInfo::args;
-            using class_t    = typename TFunctionInfo::cl;
+            using function_info_t                    = function_info<Fx>;
+            using ret_t                             = typename function_info_t::ret;
+            inline static constexpr bool have_agrs  = function_info_t::args_count > 0;
+            using type_selector_t                   = TypeSelector<have_agrs, ret_t, typename function_info_t::stack_args>;
+            using tuple_t                           = typename type_selector_t::type;
+            using qalified_t                        = typename function_info_t::args;
+            using class_t                           = typename function_info_t::cl;
 
             // not use dicrectly but in constructor have static assert
-            const TFunctionInfo function_info_;
+            const function_info_t function_info_;
 
             tuple_t tuple;
+            // only for call constructor type_selector_t and check static asserts
+            const type_selector_t ts;
 
             /**
              * @brief      The streaming operator which simply deduces type of
@@ -113,9 +144,19 @@ using namespace msl;
                     using invoking_t = typename function_info<OpFx>::cl;
                     return OwningInvokingStep<OpFx>{ aFx, std::get<invoking_t>(tuple) };
                 }
-                if constexpr (!type_selector_t::have_agrs_value && !type_selector_t::is_ref_value)
+                if constexpr (!type_selector_t::have_agrs_value)
                 {
-                    return OwningInvokingStep<OpFx>{ aFx, std::get<0>(tuple) };
+                    if constexpr(!type_selector_t::is_ref_value)
+                    {
+                        return OwningInvokingStep<OpFx>{ aFx, std::get<0>(tuple) };
+                    }
+                    if constexpr(type_selector_t::is_ref_value)
+                    {
+                        // if write staright - static_assert(false, "still no realization when ret val is refernce or pointer");
+                        // then assert work even if shouldn't
+                        using bool_type_for_assert = typename std::conditional_t<type_selector_t::is_ref_value, std::false_type, std::true_type>;
+                        static_assert(bool_type_for_assert{}, "still no realization when ret val is refernce or pointer");
+                    }
                 }
             }
 
@@ -132,7 +173,7 @@ using namespace msl;
                 if constexpr (type_selector_t::have_agrs_value)
                 {
                     static_assert(std::is_same_v<class_t, Obj>, "must be one type");
-                    this->invokeImpl(std::make_index_sequence<TFunctionInfo::args_count>{}, aFx, obj);
+                    this->invokeImpl(std::make_index_sequence<function_info_t::args_count>{}, aFx, obj);
                 }
                 if constexpr (!type_selector_t::have_agrs_value && !type_selector_t::is_ref_value)
                 {

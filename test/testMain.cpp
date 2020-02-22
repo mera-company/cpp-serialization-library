@@ -63,7 +63,14 @@ struct Object1
         i = ii;
     }
 
-    int retGetValue()
+    int retGetValue() const
+    {
+        std::cout << "retGetValue" << std::endl;
+        ii += 11111;
+        return ii;
+    }
+
+    const int& refValue() const
     {
         std::cout << "retGetValue" << std::endl;
         ii += 11111;
@@ -129,8 +136,11 @@ constexpr mil::object_invoke invoke {
     // this case not compile. it is okay because getters C style must accept only refs and pointers
     //mil::delayedInvoke<&Object3::testFail>("call5")
 
-    //mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::retGetValue>("call6"),
-    mil::delayedInvoke<&Object3::getObject2, &Object2::retObject1, &Object1::retGetValue>("call7")
+    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::retGetValue>("call6"),
+    mil::delayedInvoke<&Object3::getObject2, &Object2::retObject1, &Object1::retGetValue>("call7"),
+
+    // this case not compile, because still have no support for return types pointer and references
+    // mil::delayedInvoke<&Object3::getObject2, &Object2::retObject1, &Object1::refValue>("call8")
 };
 
 
