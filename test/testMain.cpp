@@ -120,6 +120,13 @@ struct Object2
         return obj_;
     }
 
+    const Object1& refObject1() const {
+#ifdef PRINT_DEBUG_INFO
+        std::cout << "  refObject1 invoked" << std::endl;
+#endif
+        return obj_;
+    }
+
     Object1 obj_;
 };
 
@@ -170,7 +177,7 @@ struct Serializer {
 
 
 constexpr mil::object_invoke invoke {    
-    mil::useAcceptor<Serializer>(),
+    Serializer{},
     mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call1"),
     mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call2"),
     mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call3"),
@@ -190,6 +197,16 @@ constexpr mil::object_invoke invoke {
 
 int main() {
     Object3 obj {};
+
+    {
+        Serializer acceptor;
+
+        const auto invoke_forwarder = mil::delayedInvoke<&Object3::getObject2, &Object2::retObject1, &Object1::ptrValue>("separate_test");
+        const auto delayed_invoker = invoke_forwarder.template getDelayedInvoke<Serializer>();
+
+        delayed_invoker(obj, acceptor);
+    }
+
     Serializer si;
 
     //invoke.set_logger(std::function{[](const std::string& v){ std::cout << v << std::endl; }});

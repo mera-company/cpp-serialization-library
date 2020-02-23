@@ -160,24 +160,6 @@ namespace detail {
     } /* end of namespace detail */
 
     /**
-     * @brief      Supporting struct, which holds the acceptor type
-     *
-     * @tparam     TAcceptor    Type of the acceptor
-     */
-    template<typename TAcceptor>
-    struct acceptor {};
-
-    /**
-     * @brief      Make the acceptor basing on the provided
-     *
-     * @tparam     TAcceptor    Type to use as acceptor
-     */
-    template<typename TAcceptor>
-    constexpr inline auto useAcceptor() {
-        return acceptor<TAcceptor> { };
-    }
-
-    /**
      * @brief      Creates the delayed invoke (used to pass method list into the
      *             object_invoke)
      *
@@ -217,7 +199,7 @@ namespace detail {
          * @tparam     TInvokers    Types if the invokers
          */
         template<typename ... TInvokers>
-        explicit constexpr object_invoke(acceptor<acceptor_t>, TInvokers && ... aInvokers)
+        explicit constexpr object_invoke(acceptor_t, TInvokers && ... aInvokers)
             : m_delayed_invokers { aInvokers.template getDelayedInvoke<acceptor_t>()... }
         {}
 
@@ -236,7 +218,7 @@ namespace detail {
 
     /* class deduction guides */
     template<typename TResultAcceptor, typename ... T>
-    explicit object_invoke(acceptor<TResultAcceptor>, T ...) -> object_invoke<typename first_t<T...>::cl, sizeof...(T), TResultAcceptor>;
+    explicit object_invoke(TResultAcceptor, T ...) -> object_invoke<typename first_t<T...>::cl, sizeof...(T), TResultAcceptor>;
 
 } /* end of namespace mil */
 
