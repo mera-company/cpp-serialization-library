@@ -26,6 +26,19 @@
 #include <tuple>
 #include <type_traits>
 
+// this macro will be undefined in the end this file
+#ifdef MARCRO_CHECK_THAN_REF_OR_POINTER
+#error "MARCRO_CHECK_THAN_REF_OR_POINTER already defined"
+#endif
+#define MARCRO_CHECK_THAN_REF_OR_POINTER(ClassName)\
+    {\
+        ClassName()\
+        {\
+            detail::checkThanRefOrPointer<Args...>();\
+        }\
+    };
+// endmacro defrnition
+
 /**
  * @brief      msl component namespace
  */
@@ -61,19 +74,6 @@ namespace msl {
         }
 
     } /* end of namespace detal */
-
-// this macro will be unded in this file
-#ifdef MARCRO_CHECK_THAN_REF_OR_POINTER
-#error "MARCRO_CHECK_THAN_REF_OR_POINTER already defined"
-#endif
-#define MARCRO_CHECK_THAN_REF_OR_POINTER(ClassName)\
-    {\
-        ClassName()\
-        {\
-            detail::checkThanRefOrPointer<Args...>();\
-        }\
-    };
-// endmacro defrnition
 
     /**
      * @brief      The function info base definition
@@ -417,10 +417,11 @@ MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
         : detail::method_function_info<Ret, Class, Args...>
 MARCRO_CHECK_THAN_REF_OR_POINTER(function_info)
 
-#ifdef MARCRO_CHECK_THAN_REF_OR_POINTER
-#undef MARCRO_CHECK_THAN_REF_OR_POINTER
-#endif
-
 } /* end of namespace msl */
+
+#ifndef MARCRO_CHECK_THAN_REF_OR_POINTER
+#error "have no macro MARCRO_CHECK_THAN_REF_OR_POINTER"
+#endif
+#undef MARCRO_CHECK_THAN_REF_OR_POINTER
 
 #endif /* end of #ifndef INCLUDE__FUNCTION_INFO__H */

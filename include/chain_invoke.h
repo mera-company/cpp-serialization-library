@@ -64,8 +64,8 @@ using namespace msl;
         /**
         * @brief TypeSelector will select what tuple of agrs will get from function
         *        tuple fow univsality and compatibility
-        * @tparam     have_agrs     have function atgs or no
-        * @tparam     TRet          return type
+        * @tparam     have_agrs     have function args or no
+        * @tparam     TRet          return type of function
         * @tparam     stack_args    tuple of args if function have_agrs
         * @details    Possible three variants which described below
         // 1) if have agrs - then return type must be void and function params must
@@ -87,6 +87,7 @@ using namespace msl;
                 inline static constexpr bool have_agrs_value = have_agrs;
                 inline static constexpr bool is_ref_value = is_ref;
                 inline static constexpr bool is_pointer_value = is_pointer;
+                inline static constexpr bool is_copy_value = !have_agrs_value && !is_ref_value && !is_pointer_value;
                 using args_pointer_value = std::conditional_t<is_ref, ret_pointer_or_ret_value, stack_args_or_ret_value>;
                 using type = std::conditional_t<is_pointer, ret_pointer_or_ret_value, args_pointer_value>;
 
@@ -144,7 +145,7 @@ using namespace msl;
                     using invoking_t = typename function_info<OpFx>::cl;
                     return OwningInvokingStep<OpFx>{ aFx, std::get<invoking_t>(tuple) };
                 }
-                if constexpr (!type_selector_t::have_agrs_value)
+                else
                 {
                     if constexpr(!type_selector_t::is_ref_value)
                     {
@@ -155,6 +156,13 @@ using namespace msl;
                         // if write staright - static_assert(false, "still no realization when ret val is refernce or pointer");
                         // then assert work even if shouldn't
                         using bool_type_for_assert = typename std::conditional_t<type_selector_t::is_ref_value, std::false_type, std::true_type>;
+                        static_assert(bool_type_for_assert{}, "still no realization when ret val is refernce or pointer");
+                    }
+                    if constexpr(type_selector_t::is_pointer_value)
+                    {
+                        // if write staright - static_assert(false, "still no realization when ret val is refernce or pointer");
+                        // then assert work even if shouldn't
+                        using bool_type_for_assert = typename std::conditional_t<type_selector_t::is_pointer_value, std::false_type, std::true_type>;
                         static_assert(bool_type_for_assert{}, "still no realization when ret val is refernce or pointer");
                     }
                 }
@@ -175,10 +183,20 @@ using namespace msl;
                     static_assert(std::is_same_v<class_t, Obj>, "must be one type");
                     this->invokeImpl(std::make_index_sequence<function_info_t::args_count>{}, aFx, obj);
                 }
-                if constexpr (!type_selector_t::have_agrs_value && !type_selector_t::is_ref_value)
+                else if constexpr (type_selector_t::is_copy_value)
                 {
                     static_assert(std::is_same_v<class_t, Obj>, "must be one type");
                     this->invokeImplWithret(aFx, obj);
+                }
+                else if constexpr (type_selector_t::is_ref_value)
+                {
+                    using bool_type_for_assert = typename std::conditional_t<type_selector_t::is_ref_value, std::false_type, std::true_type>;
+                    static_assert(bool_type_for_assert{}, "still no realization when ret val is refernce");
+                }
+                else if constexpr (type_selector_t::is_pointer_value)
+                {
+                    using bool_type_for_assert = typename std::conditional_t<type_selector_t::is_pointer_value, std::false_type, std::true_type>;
+                    static_assert(bool_type_for_assert{}, "still no realization when ret val is pointer");
                 }
             }
         private:
