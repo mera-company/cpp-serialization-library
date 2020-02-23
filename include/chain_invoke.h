@@ -28,6 +28,7 @@
 /* STL */
 #include <tuple>
 #include <array>
+#include <functional>
 #include <type_traits>
 
 /**
@@ -145,19 +146,19 @@ using namespace msl;
                 }
                 else
                 {
-                    if constexpr(!type_selector_t::is_ref_value)
+                    if constexpr(type_selector_t::is_copy_value)
                     {
+                        static_assert(std::tuple_size_v<tuple_t> == 1, "tuple size must be 1");
                         return OwningInvokingStep<OpFx>{ aFx, std::get<0>(tuple) };
                     }
                     else if constexpr(type_selector_t::is_ref_value)
                     {
-                        // if write staright - static_assert(false, "still no realization when ret val is refernce or pointer");
-                        // then assert work even if shouldn't
-                        using bool_type_for_assert = typename std::conditional_t<type_selector_t::is_ref_value, std::false_type, std::true_type>;
-                        static_assert(bool_type_for_assert{}, "still no realization when ret val is refernce or pointer");
+                        static_assert(std::tuple_size_v<tuple_t> == 1, "tuple size must be 1");
+                        return OwningInvokingStep<OpFx>{ aFx, std::get<0>(tuple) };
                     }
                     else if constexpr(type_selector_t::is_pointer_value)
                     {
+                        static_assert(std::tuple_size_v<tuple_t> == 1, "tuple size must be 1");
                         // if write staright - static_assert(false, "still no realization when ret val is refernce or pointer");
                         // then assert work even if shouldn't
                         using bool_type_for_assert = typename std::conditional_t<type_selector_t::is_pointer_value, std::false_type, std::true_type>;
@@ -193,12 +194,14 @@ using namespace msl;
                 }
                 else if constexpr (type_selector_t::is_ref_value)
                 {
-                    static_assert(std::is_same_v<class_t, Obj>, "must be one type");
+                    using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
+                    static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
                     this->invokeImplWithRefret(aFx, obj);
                 }
                 else if constexpr (type_selector_t::is_pointer_value)
                 {
-                    static_assert(std::is_same_v<class_t, Obj>, "must be one type");
+                    using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
+                    static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
                     this->invokeImplWithPtrret(aFx, obj);
                 }
                 else
@@ -228,17 +231,21 @@ using namespace msl;
 
             template<typename Obj>
             constexpr void invokeImplWithRefret(Fx const & aFx, Obj & obj) {
-                static_assert(std::is_same_v<class_t, Obj>, "must be one type");
-                decltype(auto) ret_val = (obj.*aFx)();
+                using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
+                static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
+                decltype(auto) ret_val = std::invoke(aFx, obj);
                 static_assert(std::is_reference_v<decltype(ret_val)>, "ret value must be reference");
                 std::get<0>(tuple) = &ret_val;
             }
 
             template<typename Obj>
             constexpr void invokeImplWithPtrret(Fx const & aFx, Obj & obj) {
-                static_assert(std::is_same_v<class_t, Obj>, "must be one type");
-                decltype(auto) ret_val = (obj.*aFx)();
-                static_assert(std::is_pointer_v<decltype(ret_val)>, "ret value must be reference");
+                // sometimes object can be ref to pointer
+                using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
+                static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
+
+                decltype(auto) ret_val = std::invoke(aFx, obj);
+                static_assert(std::is_pointer_v<decltype(ret_val)>, "ret value must be pointer");
                 std::get<0>(tuple) = ret_val;
             }
         };

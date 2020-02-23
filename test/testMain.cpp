@@ -66,63 +66,63 @@ size_t InstanceCounter<T>::instances { 0ull };
 
 struct Object1
     : public InstanceCounter<Object1> {
-    void getValue(int & i) {
+    void CStyleGetValue(int & i) {
 #ifdef PRINT_DEBUG_INFO
-        std::cout << " getValue invoked!" << std::endl;
+        std::cout << __FUNCTION__ << "  invoked!" << std::endl;
 #endif
-        ii += 11111;
+        ii += 1;
         i = ii;
     }
 
-    int retGetValue() const
+    int getValue() const
     {
 #ifdef PRINT_DEBUG_INFO
-        std::cout << "retGetValue" << std::endl;
+        std::cout << __FUNCTION__ << std::endl;
 #endif
-        ii += 11111;
+        ii += 1;
         return ii;
     }
 
     const int& refValue() const
     {
 #ifdef PRINT_DEBUG_INFO
-        std::cout << "retGetValue" << std::endl;
+        std::cout << __FUNCTION__ << std::endl;
 #endif
-        ii += 11111;
+        ii += 1;
         return ii;
     }
 
     const int* ptrValue() const
     {
 #ifdef PRINT_DEBUG_INFO
-        std::cout << "retGetValue" << std::endl;
+        std::cout << __FUNCTION__ << std::endl;
 #endif
-        ii += 11111;
+        ii += 1;
         return &ii;
     }
 
-    inline static int ii { 11111 };
+    inline static int ii { 0 };
 };
 
 struct Object2
     : public InstanceCounter<Object2> {
-    void getObject1(Object1 & obj) {
+    void CStyleGetObject1(Object1 & obj) {
 #ifdef PRINT_DEBUG_INFO
-        std::cout << "  getObject1 invoked!" << std::endl;
+        std::cout <<   __FUNCTION__ << " invoked!" << std::endl;
 #endif
         obj = obj_;
     }
 
     Object1 retObject1() const {
 #ifdef PRINT_DEBUG_INFO
-        std::cout << "  retObject1 invoked" << std::endl;
+        std::cout <<  __FUNCTION__ << " invoked" << std::endl;
 #endif
         return obj_;
     }
 
     const Object1& refObject1() const {
 #ifdef PRINT_DEBUG_INFO
-        std::cout << "  refObject1 invoked" << std::endl;
+        std::cout << __FUNCTION__ << " invoked" << std::endl;
 #endif
         return obj_;
     }
@@ -132,11 +132,25 @@ struct Object2
 
 struct Object3
     : public InstanceCounter<Object3> {
-    void getObject2(Object2 * obj) {
+    void CStyleGetObject2(Object2 * obj) {
 #ifdef PRINT_DEBUG_INFO
-        std::cout << "  getObject2 invoked!" << std::endl;
+        std::cout << __FUNCTION__ << " invoked!" << std::endl;
 #endif
         *obj = obj_;
+    }
+
+    const Object2& refObject2() {
+#ifdef PRINT_DEBUG_INFO
+        std::cout << __FUNCTION__ << " invoked!" << std::endl;
+#endif
+        return obj_;
+    }
+
+    const Object2* ptrObject2() {
+#ifdef PRINT_DEBUG_INFO
+        std::cout << __FUNCTION__ << " invoked!" << std::endl;
+#endif
+        return &obj_;
     }
 
     void testFail(int c)
@@ -178,38 +192,42 @@ struct Serializer {
 
 constexpr mil::object_invoke invoke {    
     Serializer{},
-    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call1"),
-    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call2"),
-    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call3"),
-    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call4"),
+    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::CStyleGetObject1, &Object1::CStyleGetValue>("call1"),
+    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::CStyleGetObject1, &Object1::CStyleGetValue>("call2"),
+    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::CStyleGetObject1, &Object1::CStyleGetValue>("call3"),
+    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::CStyleGetObject1, &Object1::CStyleGetValue>("call4"),
 
     // this case not compile. it is okay because getters C style must accept only refs and pointers
     //mil::delayedInvoke<&Object3::testFail>("call5")
 
-    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::retGetValue>("call6"),
-    mil::delayedInvoke<&Object3::getObject2, &Object2::retObject1, &Object1::retGetValue>("call7"),
+    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::CStyleGetObject1, &Object1::getValue>("call6"),
+    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::retObject1, &Object1::getValue>("call7"),
 
-    // this case not compile, because still have no support for return types pointer and references
-    mil::delayedInvoke<&Object3::getObject2, &Object2::retObject1, &Object1::refValue>("call8"),
-    mil::delayedInvoke<&Object3::getObject2, &Object2::retObject1, &Object1::ptrValue>("call9")
+    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::retObject1, &Object1::refValue>("call8"),
+    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::retObject1, &Object1::ptrValue>("call9"),
+    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::refObject1, &Object1::ptrValue>("call9"),
+
+    mil::delayedInvoke<&Object3::refObject2, &Object2::refObject1, &Object1::ptrValue>("call9")
 };
 
 
 int main() {
-    Object3 obj {};
-
-    {
-        Serializer acceptor;
-
-        const auto invoke_forwarder = mil::delayedInvoke<&Object3::getObject2, &Object2::retObject1, &Object1::ptrValue>("separate_test");
-        const auto delayed_invoker = invoke_forwarder.template getDelayedInvoke<Serializer>();
-
-        delayed_invoker(obj, acceptor);
-    }
-
+    Object3 obj;
     Serializer si;
 
-    //invoke.set_logger(std::function{[](const std::string& v){ std::cout << v << std::endl; }});
+    {
+        const auto invoke_forwarder = mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::retObject1, &Object1::ptrValue>("separate_test_1");
+        const auto delayed_invoker = invoke_forwarder.template getDelayedInvoke<Serializer>();
+
+        delayed_invoker(obj, si);
+    }
+    {
+        const auto invoke_forwarder = mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::refObject1, &Object1::ptrValue>("separate_test_2");
+        const auto delayed_invoker = invoke_forwarder.template getDelayedInvoke<Serializer>();
+
+        delayed_invoker(obj, si);
+    }
+
     invoke(obj, si);
     
     return 0;

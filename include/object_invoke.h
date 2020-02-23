@@ -81,6 +81,9 @@ namespace detail {
         constexpr void operator()(object_t & aObject, acceptor_t & aAcceptor) const {
             (*m_invokerPtr)(aObject, m_tag, aAcceptor);
         }
+        constexpr void operator()(object_t* aObject, acceptor_t & aAcceptor) const {
+            (*m_invokerPtr)(*aObject, m_tag, aAcceptor);
+        }
     private:
         /**
          * @brief      The private invoker, performs chain invoke for the
