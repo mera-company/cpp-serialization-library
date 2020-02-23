@@ -38,6 +38,10 @@
  * @note       MIL - Metaprogramming Invoking Library
  */
 namespace mil {
+/**
+ * @brief      detail component namespace
+ */
+namespace detail {
     /**
      * @brief      The delayed invoke holds information about methods chain to
      *             be invoked. Invokes it and passes the result into the invoker
@@ -96,19 +100,13 @@ namespace mil {
         /**
          * @brief      Pointer to a concrete invoker specialization
          */
-        invoker_ptr_t m_invokerPtr;
+        invoker_ptr_t m_invokerPtr = nullptr;
 
         /**
          * @brief      Associated tag
          */
-        char const *  m_tag;
+        char const *  m_tag = nullptr;
     };
-
-
-    /**
-     * @brief      detail component namespace
-     */
-    namespace detail {
 
     /** @{ */
     /* first class meta-function */
@@ -210,7 +208,7 @@ namespace mil {
         using object_t         = TObjectType;
         using acceptor_t       = TResultAcceptor;
 
-        using delayed_invoke_t = delayed_invoke<object_t, acceptor_t>;
+        using delayed_invoke_t = detail::delayed_invoke<object_t, acceptor_t>;
 
 
         /**

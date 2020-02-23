@@ -25,6 +25,11 @@
 
 #include <object_invoke.h>
 
+#ifdef PRINT_DEBUG_INFO
+#erro "PRINT_DEBUG_INFO already used"
+#endif
+//#define PRINT_DEBUG_INFO
+
 template<typename T>
 struct InstanceCounter {
     static size_t instances;
@@ -39,16 +44,20 @@ struct InstanceCounter {
 
     void incAndLog() const {
         ++instances;
+#ifdef PRINT_DEBUG_INFO
         std::cout << "    +++New object \'" << typeid(T).name() << "\', addr: \'"
                   << static_cast<void const *>(this) << "\' created, total: \'"
                   << instances << "\'" << std::endl;
+#endif
     }
 
     void decAndLog() const {
         --instances;
+#ifdef PRINT_DEBUG_INFO
         std::cout << "    ---Object \'" << typeid(T).name() << "\', addr: \'"
                   << static_cast<void const *>(this) << "\' destroyed, total: \'"
                   << instances << "\'" << std::endl;
+#endif
     }
 };
 
@@ -58,26 +67,78 @@ size_t InstanceCounter<T>::instances { 0ull };
 struct Object1
     : public InstanceCounter<Object1> {
     void getValue(int & i) {
-    //    std::cout << " getValue invoked!" << std::endl;
-        static int ii { 11111 };
+#ifdef PRINT_DEBUG_INFO
+        std::cout << " getValue invoked!" << std::endl;
+#endif
         ii += 11111;
         i = ii;
     }
+
+    int retGetValue() const
+    {
+#ifdef PRINT_DEBUG_INFO
+        std::cout << "retGetValue" << std::endl;
+#endif
+        ii += 11111;
+        return ii;
+    }
+
+    const int& refValue() const
+    {
+#ifdef PRINT_DEBUG_INFO
+        std::cout << "retGetValue" << std::endl;
+#endif
+        ii += 11111;
+        return ii;
+    }
+
+    const int* ptrValue() const
+    {
+#ifdef PRINT_DEBUG_INFO
+        std::cout << "retGetValue" << std::endl;
+#endif
+        ii += 11111;
+        return &ii;
+    }
+
+    inline static int ii { 11111 };
 };
 
 struct Object2
     : public InstanceCounter<Object2> {
     void getObject1(Object1 & obj) {
-      //  std::cout << "  getObject1 invoked!" << std::endl;
-        (void)obj;
+#ifdef PRINT_DEBUG_INFO
+        std::cout << "  getObject1 invoked!" << std::endl;
+#endif
+        obj = obj_;
     }
+
+    Object1 retObject1() const {
+#ifdef PRINT_DEBUG_INFO
+        std::cout << "  retObject1 invoked" << std::endl;
+#endif
+        return obj_;
+    }
+
+    Object1 obj_;
 };
 
 struct Object3
     : public InstanceCounter<Object3> {
     void getObject2(Object2 * obj) {
-        //std::cout << "  getObject2 invoked!" << std::endl;
+#ifdef PRINT_DEBUG_INFO
+        std::cout << "  getObject2 invoked!" << std::endl;
+#endif
+        *obj = obj_;
     }
+
+    void testFail(int c)
+    {
+        c = 15;
+        std::cout << c << std::endl;
+    }
+
+    Object2 obj_;
 };
 
 struct Serializer {
@@ -88,20 +149,42 @@ struct Serializer {
         std::cout << "\'\n";
     }
 
+    template<typename T>
+    static auto& get_wrapper(const T& val)
+    {
+        constexpr bool is_ponter = std::is_pointer_v<std::remove_reference_t<decltype(val)>>;
+        if constexpr(is_ponter) {
+            return *val;
+        } else {
+           return val;
+        }
+    }
+
     template<typename Tuple, size_t ... Idx>
     static std::ostream & putStream(std::ostream & aOs, Tuple const & t, std::index_sequence<Idx...>) {
-        return (aOs << ... << std::get<Idx>(t));
+        (aOs << ... << get_wrapper(std::get<Idx>(t)));
+
+        return aOs;
     }
 };
 
 
-
-constexpr mil::object_invoke invoke {
+constexpr mil::object_invoke invoke {    
     mil::useAcceptor<Serializer>(),
     mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call1"),
     mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call2"),
     mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call3"),
-    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call4")
+    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::getValue>("call4"),
+
+    // this case not compile. it is okay because getters C style must accept only refs and pointers
+    //mil::delayedInvoke<&Object3::testFail>("call5")
+
+    mil::delayedInvoke<&Object3::getObject2, &Object2::getObject1, &Object1::retGetValue>("call6"),
+    mil::delayedInvoke<&Object3::getObject2, &Object2::retObject1, &Object1::retGetValue>("call7"),
+
+    // this case not compile, because still have no support for return types pointer and references
+    mil::delayedInvoke<&Object3::getObject2, &Object2::retObject1, &Object1::refValue>("call8"),
+    mil::delayedInvoke<&Object3::getObject2, &Object2::retObject1, &Object1::ptrValue>("call9")
 };
 
 
@@ -109,6 +192,7 @@ int main() {
     Object3 obj {};
     Serializer si;
 
+    //invoke.set_logger(std::function{[](const std::string& v){ std::cout << v << std::endl; }});
     invoke(obj, si);
     
     return 0;
