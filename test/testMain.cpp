@@ -66,7 +66,7 @@ size_t InstanceCounter<T>::instances { 0ull };
 
 struct Object1
     : public InstanceCounter<Object1> {
-    void CStyleGetValue(int & i) {
+    void CStyleGetValue(int & i) const {
 #ifdef PRINT_DEBUG_INFO
         std::cout << __FUNCTION__ << "  invoked!" << std::endl;
 #endif
@@ -106,14 +106,14 @@ struct Object1
 
 struct Object2
     : public InstanceCounter<Object2> {
-    void CStyleGetObject1(Object1 & obj) {
+    void CStyleGetObject1(Object1 & obj) const {
 #ifdef PRINT_DEBUG_INFO
         std::cout <<   __FUNCTION__ << " invoked!" << std::endl;
 #endif
         obj = obj_;
     }
 
-    Object1 retObject1() const {
+    Object1 getObject1() const {
 #ifdef PRINT_DEBUG_INFO
         std::cout <<  __FUNCTION__ << " invoked" << std::endl;
 #endif
@@ -127,16 +127,30 @@ struct Object2
         return obj_;
     }
 
+    const Object1& ptrObject1() const {
+#ifdef PRINT_DEBUG_INFO
+        std::cout << __FUNCTION__ << " invoked" << std::endl;
+#endif
+        return obj_;
+    }
+
     Object1 obj_;
 };
 
 struct Object3
     : public InstanceCounter<Object3> {
-    void CStyleGetObject2(Object2 * obj) {
+    void CStyleGetObject2(Object2 * obj) const {
 #ifdef PRINT_DEBUG_INFO
         std::cout << __FUNCTION__ << " invoked!" << std::endl;
 #endif
         *obj = obj_;
+    }
+
+    Object2 getObject2() const {
+#ifdef PRINT_DEBUG_INFO
+        std::cout << __FUNCTION__ << " invoked!" << std::endl;
+#endif
+        return obj_;
     }
 
     const Object2& refObject2() {
@@ -189,46 +203,68 @@ struct Serializer {
     }
 };
 
-
-constexpr mil::object_invoke invoke {    
-    Serializer{},
-    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::CStyleGetObject1, &Object1::CStyleGetValue>("call1"),
-    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::CStyleGetObject1, &Object1::CStyleGetValue>("call2"),
-    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::CStyleGetObject1, &Object1::CStyleGetValue>("call3"),
-    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::CStyleGetObject1, &Object1::CStyleGetValue>("call4"),
-
-    // this case not compile. it is okay because getters C style must accept only refs and pointers
-    //mil::delayedInvoke<&Object3::testFail>("call5")
-
-    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::CStyleGetObject1, &Object1::getValue>("call6"),
-    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::retObject1, &Object1::getValue>("call7"),
-
-    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::retObject1, &Object1::refValue>("call8"),
-    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::retObject1, &Object1::ptrValue>("call9"),
-    mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::refObject1, &Object1::ptrValue>("call9"),
-
-    mil::delayedInvoke<&Object3::refObject2, &Object2::refObject1, &Object1::ptrValue>("call9")
+template<auto val>
+struct value {
+    constexpr inline static auto F = val;
 };
 
+template<auto ... T>
+using values_tuple = std::tuple<value<T>...>;
 
-int main() {
+using obj3_methods_t    = values_tuple<&Object3::CStyleGetObject2, &Object3::getObject2, &Object3::refObject2, &Object3::ptrObject2>;
+using obj2_methods_t    = values_tuple<&Object2::CStyleGetObject1, &Object2::getObject1, &Object2::refObject1, &Object2::ptrObject1>;
+using obj1_methods_t    = values_tuple<&Object1::CStyleGetValue,   &Object1::getValue,   &Object1::refValue,   &Object1::ptrValue>;
+
+template<auto ... T>
+void constexpr one_test(Object3& obj, Serializer& si)
+{
+    constexpr mil::object_invoke invoke {
+        Serializer{},
+        mil::delayedInvoke<T ...>("tag1")
+    };
+
+    invoke(obj, si);
+
+    {
+        const auto invoke_forwarder = mil::delayedInvoke<T ...>("tag2");
+        const auto delayed_invoker = invoke_forwarder.template getDelayedInvoke<Serializer>();
+
+        delayed_invoker(obj, si);
+    }
+}
+
+template<size_t NObj3, size_t NObj2, size_t NObj1>
+void constexpr cross_test(Object3& obj, Serializer& si,
+                          const obj3_methods_t& obj3_methods, const obj2_methods_t& obj2_methods, const obj1_methods_t& obj1_methods)
+{
+    one_test<std::get<NObj3>(obj3_methods).F, std::get<NObj2>(obj2_methods).F, std::get<NObj1>(obj1_methods).F>(obj, si);
+    if constexpr(NObj2 != 0) {
+        cross_test<NObj3, NObj2 - 1,NObj1>(obj, si, obj3_methods, obj2_methods, obj1_methods);
+
+        if constexpr(NObj1 != 0) {
+            cross_test<NObj3, NObj2,NObj1 - 1>(obj, si, obj3_methods, obj2_methods, obj1_methods);
+        }
+    }
+}
+
+template<size_t N>
+void constexpr block_test()
+{
     Object3 obj;
     Serializer si;
 
-    {
-        const auto invoke_forwarder = mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::retObject1, &Object1::ptrValue>("separate_test_1");
-        const auto delayed_invoker = invoke_forwarder.template getDelayedInvoke<Serializer>();
+    const obj3_methods_t obj3_methods{};
+    const obj2_methods_t obj2_methods{};
+    const obj1_methods_t obj1_methods{};
 
-        delayed_invoker(obj, si);
+    cross_test<N, N, N>(obj, si, obj3_methods, obj2_methods, obj1_methods);
+    if constexpr (N != 0) {
+        cross_test<N-1, N, N>(obj, si, obj3_methods, obj2_methods, obj1_methods);
     }
-    {
-        const auto invoke_forwarder = mil::delayedInvoke<&Object3::CStyleGetObject2, &Object2::refObject1, &Object1::ptrValue>("separate_test_2");
-        const auto delayed_invoker = invoke_forwarder.template getDelayedInvoke<Serializer>();
+}
 
-        delayed_invoker(obj, si);
-    }
-
-    invoke(obj, si);
+int main() {
+    block_test<3>();
     
     return 0;
 }

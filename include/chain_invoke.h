@@ -159,10 +159,7 @@ using namespace msl;
                     else if constexpr(type_selector_t::is_pointer_value)
                     {
                         static_assert(std::tuple_size_v<tuple_t> == 1, "tuple size must be 1");
-                        // if write staright - static_assert(false, "still no realization when ret val is refernce or pointer");
-                        // then assert work even if shouldn't
-                        using bool_type_for_assert = typename std::conditional_t<type_selector_t::is_pointer_value, std::false_type, std::true_type>;
-                        static_assert(bool_type_for_assert{}, "still no realization when ret val is refernce or pointer");
+                        return OwningInvokingStep<OpFx>{ aFx, std::get<0>(tuple) };
                     }
                     else
                     {
@@ -184,24 +181,30 @@ using namespace msl;
             {
                 if constexpr (type_selector_t::have_agrs_value)
                 {
-                    static_assert(std::is_same_v<class_t, Obj>, "must be one type");
+                    using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
+                    static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
+
                     this->invokeImpl(std::make_index_sequence<function_info_t::args_count>{}, aFx, obj);
                 }
                 else if constexpr (type_selector_t::is_copy_value)
                 {
-                    static_assert(std::is_same_v<class_t, Obj>, "must be one type");
+                    using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
+                    static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
+
                     this->invokeImplWithret(aFx, obj);
                 }
                 else if constexpr (type_selector_t::is_ref_value)
                 {
                     using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
                     static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
+
                     this->invokeImplWithRefret(aFx, obj);
                 }
                 else if constexpr (type_selector_t::is_pointer_value)
                 {
                     using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
                     static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
+
                     this->invokeImplWithPtrret(aFx, obj);
                 }
                 else
@@ -219,14 +222,25 @@ using namespace msl;
              */
             template<typename Obj, size_t ... Idx>
             constexpr void invokeImpl(std::index_sequence<Idx...>, Fx const & aFx, Obj & obj) {
-                static_assert(std::is_same_v<class_t, Obj>, "must be one type");
+                using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
+                static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
+
                 (obj.*aFx)(conditionalAddressOf<std::tuple_element_t<Idx, qalified_t>>(std::get<Idx>(tuple))...);
+            }
+            template<typename Obj, size_t ... Idx>
+            constexpr void invokeImpl(std::index_sequence<Idx...>, Fx const & aFx, Obj* obj) {
+                using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
+                static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
+
+                (obj->*aFx)(conditionalAddressOf<std::tuple_element_t<Idx, qalified_t>>(std::get<Idx>(tuple))...);
             }
 
             template<typename Obj>
             constexpr void invokeImplWithret(Fx const & aFx, Obj & obj) {
-                static_assert(std::is_same_v<class_t, Obj>, "must be one type");
-                std::get<0>(tuple) = (obj.*aFx)();
+                using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
+                static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
+
+                std::get<0>(tuple) = std::invoke(aFx, obj);
             }
 
             template<typename Obj>
