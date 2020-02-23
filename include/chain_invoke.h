@@ -81,7 +81,7 @@ using namespace msl;
                 inline static constexpr bool is_ref = std::is_reference_v<TRet>;
                 inline static constexpr bool is_pointer = std::is_pointer_v<TRet>;
                 using no_ref_but_pointer = std::tuple<std::add_pointer_t<std::remove_reference_t<TRet>>>;
-                using ret_pointer_or_ret_value = std::conditional_t<is_ref, std::tuple<no_ref_but_pointer>, std::tuple<TRet>>;
+                using ret_pointer_or_ret_value = std::conditional_t<is_ref, no_ref_but_pointer, std::tuple<TRet>>;
 
             public:
                 inline static constexpr bool have_agrs_value = have_agrs;
@@ -101,8 +101,6 @@ using namespace msl;
                     {
                         static_assert(! std::is_same_v<void, TRet>, "if have no args then return value can't be void");
                     }
-                    static_assert(!is_ref_value, "still have no realization for return type reference");
-                    static_assert(!is_pointer_value, "still have no realization for return type pointer");
                 }
         };
 
@@ -151,19 +149,24 @@ using namespace msl;
                     {
                         return OwningInvokingStep<OpFx>{ aFx, std::get<0>(tuple) };
                     }
-                    if constexpr(type_selector_t::is_ref_value)
+                    else if constexpr(type_selector_t::is_ref_value)
                     {
                         // if write staright - static_assert(false, "still no realization when ret val is refernce or pointer");
                         // then assert work even if shouldn't
                         using bool_type_for_assert = typename std::conditional_t<type_selector_t::is_ref_value, std::false_type, std::true_type>;
                         static_assert(bool_type_for_assert{}, "still no realization when ret val is refernce or pointer");
                     }
-                    if constexpr(type_selector_t::is_pointer_value)
+                    else if constexpr(type_selector_t::is_pointer_value)
                     {
                         // if write staright - static_assert(false, "still no realization when ret val is refernce or pointer");
                         // then assert work even if shouldn't
                         using bool_type_for_assert = typename std::conditional_t<type_selector_t::is_pointer_value, std::false_type, std::true_type>;
                         static_assert(bool_type_for_assert{}, "still no realization when ret val is refernce or pointer");
+                    }
+                    else
+                    {
+                        // type_selector_t::have_agrs_value myst be false here
+                        static_assert(type_selector_t::have_agrs_value, "unknown compile time branch");
                     }
                 }
             }
@@ -190,13 +193,18 @@ using namespace msl;
                 }
                 else if constexpr (type_selector_t::is_ref_value)
                 {
-                    using bool_type_for_assert = typename std::conditional_t<type_selector_t::is_ref_value, std::false_type, std::true_type>;
-                    static_assert(bool_type_for_assert{}, "still no realization when ret val is refernce");
+                    static_assert(std::is_same_v<class_t, Obj>, "must be one type");
+                    this->invokeImplWithRefret(aFx, obj);
                 }
                 else if constexpr (type_selector_t::is_pointer_value)
                 {
-                    using bool_type_for_assert = typename std::conditional_t<type_selector_t::is_pointer_value, std::false_type, std::true_type>;
-                    static_assert(bool_type_for_assert{}, "still no realization when ret val is pointer");
+                    static_assert(std::is_same_v<class_t, Obj>, "must be one type");
+                    this->invokeImplWithPtrret(aFx, obj);
+                }
+                else
+                {
+                    // type_selector_t::have_agrs_value myst be false here
+                    static_assert(type_selector_t::have_agrs_value, "unknown compile time branch");
                 }
             }
         private:
@@ -216,6 +224,22 @@ using namespace msl;
             constexpr void invokeImplWithret(Fx const & aFx, Obj & obj) {
                 static_assert(std::is_same_v<class_t, Obj>, "must be one type");
                 std::get<0>(tuple) = (obj.*aFx)();
+            }
+
+            template<typename Obj>
+            constexpr void invokeImplWithRefret(Fx const & aFx, Obj & obj) {
+                static_assert(std::is_same_v<class_t, Obj>, "must be one type");
+                decltype(auto) ret_val = (obj.*aFx)();
+                static_assert(std::is_reference_v<decltype(ret_val)>, "ret value must be reference");
+                std::get<0>(tuple) = &ret_val;
+            }
+
+            template<typename Obj>
+            constexpr void invokeImplWithPtrret(Fx const & aFx, Obj & obj) {
+                static_assert(std::is_same_v<class_t, Obj>, "must be one type");
+                decltype(auto) ret_val = (obj.*aFx)();
+                static_assert(std::is_pointer_v<decltype(ret_val)>, "ret value must be reference");
+                std::get<0>(tuple) = ret_val;
             }
         };
 
