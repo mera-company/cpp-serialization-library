@@ -12,6 +12,29 @@ enable_testing()
 
 add_library(mil INTERFACE)
 
+target_compile_options(mil
+    INTERFACE
+
+    -Werror
+
+    -Wall
+    -Wextra
+    -Wpedantic
+
+    -Wcast-align
+    -Wcast-qual
+    -Wconversion
+    -Wctor-dtor-privacy
+    -Wenum-compare
+    -Wfloat-equal
+    -Wnon-virtual-dtor
+    -Wold-style-cast
+    -Woverloaded-virtual
+    -Wredundant-decls
+    -Wsign-conversion
+    -Wsign-promo
+)
+
 target_include_directories(mil
     INTERFACE
         $<INSTALL_INTERFACE:include>

@@ -38,6 +38,10 @@
  * @note       MIL - Metaprogramming Invoking Library
  */
 namespace mil {
+/**
+ * @brief      detail component namespace
+ */
+namespace detail {
     /**
      * @brief      The delayed invoke holds information about methods chain to
      *             be invoked. Invokes it and passes the result into the invoker
@@ -77,6 +81,9 @@ namespace mil {
         constexpr void operator()(object_t & aObject, acceptor_t & aAcceptor) const {
             (*m_invokerPtr)(aObject, m_tag, aAcceptor);
         }
+        constexpr void operator()(object_t* aObject, acceptor_t & aAcceptor) const {
+            (*m_invokerPtr)(*aObject, m_tag, aAcceptor);
+        }
     private:
         /**
          * @brief      The private invoker, performs chain invoke for the
@@ -96,19 +103,13 @@ namespace mil {
         /**
          * @brief      Pointer to a concrete invoker specialization
          */
-        invoker_ptr_t m_invokerPtr;
+        invoker_ptr_t m_invokerPtr = nullptr;
 
         /**
          * @brief      Associated tag
          */
-        char const *  m_tag;
+        char const *  m_tag = nullptr;
     };
-
-
-    /**
-     * @brief      detail component namespace
-     */
-    namespace detail {
 
     /** @{ */
     /* first class meta-function */
@@ -162,24 +163,6 @@ namespace mil {
     } /* end of namespace detail */
 
     /**
-     * @brief      Supporting struct, which holds the acceptor type
-     *
-     * @tparam     TAcceptor    Type of the acceptor
-     */
-    template<typename TAcceptor>
-    struct acceptor {};
-
-    /**
-     * @brief      Make the acceptor basing on the provided
-     *
-     * @tparam     TAcceptor    Type to use as acceptor
-     */
-    template<typename TAcceptor>
-    constexpr inline auto useAcceptor() {
-        return acceptor<TAcceptor> { };
-    }
-
-    /**
      * @brief      Creates the delayed invoke (used to pass method list into the
      *             object_invoke)
      *
@@ -210,7 +193,7 @@ namespace mil {
         using object_t         = TObjectType;
         using acceptor_t       = TResultAcceptor;
 
-        using delayed_invoke_t = delayed_invoke<object_t, acceptor_t>;
+        using delayed_invoke_t = detail::delayed_invoke<object_t, acceptor_t>;
 
 
         /**
@@ -219,7 +202,7 @@ namespace mil {
          * @tparam     TInvokers    Types if the invokers
          */
         template<typename ... TInvokers>
-        explicit constexpr object_invoke(acceptor<acceptor_t>, TInvokers && ... aInvokers)
+        explicit constexpr object_invoke(acceptor_t, TInvokers && ... aInvokers)
             : m_delayed_invokers { aInvokers.template getDelayedInvoke<acceptor_t>()... }
         {}
 
@@ -238,7 +221,7 @@ namespace mil {
 
     /* class deduction guides */
     template<typename TResultAcceptor, typename ... T>
-    explicit object_invoke(acceptor<TResultAcceptor>, T ...) -> object_invoke<typename first_t<T...>::cl, sizeof...(T), TResultAcceptor>;
+    explicit object_invoke(TResultAcceptor, T ...) -> object_invoke<typename first_t<T...>::cl, sizeof...(T), TResultAcceptor>;
 
 } /* end of namespace mil */
 
