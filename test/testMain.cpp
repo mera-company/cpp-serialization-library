@@ -26,7 +26,7 @@
 #include <object_invoke.h>
 
 #ifdef PRINT_DEBUG_INFO
-#erro "PRINT_DEBUG_INFO already used"
+#error "PRINT_DEBUG_INFO already used"
 #endif
 //#define PRINT_DEBUG_INFO
 

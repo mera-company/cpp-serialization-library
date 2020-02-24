@@ -222,7 +222,7 @@ using namespace msl;
              */
             template<typename Obj, size_t ... Idx>
             constexpr void invokeImpl(std::index_sequence<Idx...>, Fx const & aFx, Obj & obj) {
-                using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
+                using compare_obj_t = std::remove_const_t<Obj>;
                 static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
 
                 (obj.*aFx)(conditionalAddressOf<std::tuple_element_t<Idx, qalified_t>>(std::get<Idx>(tuple))...);
@@ -231,6 +231,9 @@ using namespace msl;
             constexpr void invokeImpl(std::index_sequence<Idx...>, Fx const & aFx, Obj* obj) {
                 using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
                 static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
+                if(obj == nullptr) {
+                    throw std::runtime_error(std::string{"object nullptr at "} + __FUNCTION__);
+                }
 
                 (obj->*aFx)(conditionalAddressOf<std::tuple_element_t<Idx, qalified_t>>(std::get<Idx>(tuple))...);
             }
@@ -239,6 +242,11 @@ using namespace msl;
             constexpr void invokeImplWithret(Fx const & aFx, Obj & obj) {
                 using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
                 static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
+                if constexpr(std::is_pointer_v<Obj>){
+                    if(obj == nullptr) {
+                        throw std::runtime_error(std::string{"object nullptr at "} + __FUNCTION__);
+                    }
+                }
 
                 std::get<0>(tuple) = std::invoke(aFx, obj);
             }
@@ -247,6 +255,12 @@ using namespace msl;
             constexpr void invokeImplWithRefret(Fx const & aFx, Obj & obj) {
                 using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
                 static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
+                if constexpr(std::is_pointer_v<Obj>){
+                    if(obj == nullptr) {
+                        throw std::runtime_error(std::string{"object nullptr at "} + __FUNCTION__);
+                    }
+                }
+
                 decltype(auto) ret_val = std::invoke(aFx, obj);
                 static_assert(std::is_reference_v<decltype(ret_val)>, "ret value must be reference");
                 std::get<0>(tuple) = &ret_val;
@@ -257,6 +271,11 @@ using namespace msl;
                 // sometimes object can be ref to pointer
                 using compare_obj_t = std::remove_const_t<std::remove_pointer_t<Obj>>;
                 static_assert(std::is_same_v<std::remove_const_t<class_t>, compare_obj_t>, "must be one type");
+                if constexpr(std::is_pointer_v<Obj>){
+                    if(obj == nullptr) {
+                        throw std::runtime_error(std::string{"object nullptr at "} + __FUNCTION__);
+                    }
+                }
 
                 decltype(auto) ret_val = std::invoke(aFx, obj);
                 static_assert(std::is_pointer_v<decltype(ret_val)>, "ret value must be pointer");
